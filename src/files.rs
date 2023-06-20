@@ -7,9 +7,9 @@ pub fn get_packages(root_dir_path: &String, packages_dir: &String) -> Vec<String
     package_path.push_str("/");
     package_path.push_str(&packages_dir);
     
-    let dirs = match fs::read_dir(package_path) {
+    let dirs = match fs::read_dir(&package_path) {
         Ok(dirs) => dirs,
-        Err(e) => panic!("Failed to read root dir: {}", e),
+        Err(e) => panic!("Failed to read package dir: {} error: {}", package_path, e),
     };
     
     for entry in dirs {

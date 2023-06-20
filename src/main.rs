@@ -1,11 +1,11 @@
-use std::{env, thread};
+use std::{env, thread, process};
 mod files;
 use files::{filter_files_to_packages, get_packages};
 mod git;
 use git::get_changed_files;
 mod config;
 use config::load_config;
-use argh::{FromArgs};
+use argh::FromArgs;
 
 extern crate run_shell;
 use run_shell::*;
@@ -74,6 +74,11 @@ fn run(
         println!("Detecting changes");
         let changed_files = get_changed_files(root_dir, main_branch);
         packages = filter_files_to_packages(packages, changed_files);
+
+        if packages.len() == 0 {
+            println!("Detected no changes in packages. Exiting");
+            process::exit(0x0100);
+        }
     }
 
     let mut handles = Vec::<std::thread::JoinHandle<()>>::new();
@@ -121,7 +126,6 @@ fn run_command(command: String, root_dir: String, package: String) {
         println!("Running {} in {}", command, package);
         // change cwd
         println!("Running {} in {}", package_command.clone().unwrap(), &path);
-        //Command::new(package_command.unwrap()).spawn().expect("command failed");
         cmd!(&package_command.unwrap(), &path).run().unwrap();
         println!("Successfully ran {}", &path);
     }
