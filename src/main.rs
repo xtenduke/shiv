@@ -1,4 +1,5 @@
-use std::{env, thread, process};
+use std::{env, thread};
+use std::process::exit;
 mod files;
 use files::{filter_files_to_packages, get_packages};
 mod git;
@@ -6,9 +7,8 @@ use git::get_changed_files;
 mod config;
 use config::load_config;
 use argh::FromArgs;
-
-extern crate run_shell;
-use run_shell::*;
+mod runner;
+use runner::run_on_shell;
 
 fn get_env_dir() -> String {
     let root_dir_path = match env::current_dir() {
@@ -77,7 +77,7 @@ fn run(
 
         if packages.len() == 0 {
             println!("Detected no changes in packages. Exiting");
-            process::exit(0x0100);
+            exit(0x0100);
         }
     }
 
@@ -104,8 +104,6 @@ fn run_command(command: String, root_dir: String, package: String) {
     path.push_str("/");
     path.push_str(&package);
 
-    assert!(env::set_current_dir(&path).is_ok());
-
     let mut config_path = path.clone();
     config_path.push_str("/");
     config_path.push_str("shiv.json");
@@ -119,15 +117,20 @@ fn run_command(command: String, root_dir: String, package: String) {
         }
     }
 
-    if package_command.is_none() {
-        println!("Found no entries for {} in {}", command, package);
-        // process::exit(0x0100);
-    } else {
-        println!("Running {} in {}", command, package);
-        // change cwd
-        println!("Running {} in {}", package_command.clone().unwrap(), &path);
-        cmd!(&package_command.unwrap(), &path).run().unwrap();
-        println!("Successfully ran {}", &path);
-    }
+    if let Some(package_command) = package_command {
+        println!("Running {} in {}", &package_command, package);
+        /// https://github.com/rust-lang/rust/issues/53667
+        if let Ok(res) = run_on_shell(&package_command, &path) {
+            if res.status.success() {
+                println!("Successfully ran {} on {}", &package_command, &path);
+                // return;
+            }
+        }
 
+        // fallthrough err
+        println!("Execution of {} on {} failed", &package_command, &path);
+        exit(0x0100);
+    } else {
+        println!("Found no entries for {} in {}", command, package);
+    }
 }
