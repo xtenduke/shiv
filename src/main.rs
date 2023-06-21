@@ -97,7 +97,8 @@ fn run(
     }
 }
 
-fn run_command(command: String, root_dir: String, package: String) {
+/// Parses command, runs on runner, true if success, false if fail
+fn run_command(command: String, root_dir: String, package: String) -> bool {
     // look for shiv.json file in package
     // process fork here
     let mut path = root_dir.clone();
@@ -119,18 +120,19 @@ fn run_command(command: String, root_dir: String, package: String) {
 
     if let Some(package_command) = package_command {
         println!("Running {} in {}", &package_command, package);
-        /// https://github.com/rust-lang/rust/issues/53667
+        // https://github.com/rust-lang/rust/issues/53667
         if let Ok(res) = run_on_shell(&package_command, &path) {
             if res.status.success() {
                 println!("Successfully ran {} on {}", &package_command, &path);
-                // return;
+                return true;
             }
         }
 
         // fallthrough err
         println!("Execution of {} on {} failed", &package_command, &path);
-        exit(0x0100);
+        return false;
     } else {
         println!("Found no entries for {} in {}", command, package);
+        return true;
     }
 }
