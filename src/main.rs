@@ -1,3 +1,4 @@
+use std::io::BufReader;
 use std::{env, thread};
 use std::process::exit;
 mod files;
@@ -122,6 +123,16 @@ fn run_command(command: String, root_dir: String, package: String) -> bool {
         println!("Running {} in {}", &package_command, package);
         // https://github.com/rust-lang/rust/issues/53667
         if let Ok(res) = run_on_shell(&package_command, &path) {
+            let stdout_string = String::from_utf8(res.stdout).unwrap();
+            for out_line in stdout_string.lines() {
+                println!("[{}]  {}", package, out_line);
+            }
+
+            let stderr_string = String::from_utf8(res.stderr).unwrap();
+            for err_line in stderr_string.lines() {
+                println!("[{}]  {}", package, err_line);
+            }
+
             if res.status.success() {
                 println!("Successfully ran {} on {}", &package_command, &path);
                 return true;
