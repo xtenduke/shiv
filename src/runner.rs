@@ -16,7 +16,6 @@ pub fn run_on_shell(command: &String, dir: &String) -> Result<Output, std::io::E
     let child_stdin = child.stdin.as_mut().unwrap();
     child_stdin.write_all(&command.as_bytes())?;
     child_stdin.write_all(b"\n")?;
-    drop(child_stdin);
 
     let res = child.wait_with_output();
     return res;

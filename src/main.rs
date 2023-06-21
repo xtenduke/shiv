@@ -1,15 +1,17 @@
-use std::io::BufReader;
-use std::{env, thread};
+use std::{env};
 use std::process::exit;
+use argh::FromArgs;
+use threadpool::ThreadPool;
+
 mod files;
 use files::{filter_files_to_packages, get_packages};
 mod git;
 use git::get_changed_files;
 mod config;
 use config::load_config;
-use argh::FromArgs;
 mod runner;
 use runner::run_on_shell;
+
 
 fn get_env_dir() -> String {
     let root_dir_path = match env::current_dir() {
@@ -42,6 +44,10 @@ struct Args {
     /// command to run on packages
     #[argh(option)]
     command: String,
+
+    /// on to enable full concurrency, define limit
+    #[argh(switch)]
+    concurrency: i32,
 }
 
 
@@ -82,20 +88,19 @@ fn run(
         }
     }
 
-    let mut handles = Vec::<std::thread::JoinHandle<()>>::new();
+
+    // if args have concurrecy passed in, use min value of packages.len, concurrency
+    let thread_pool = ThreadPool::new(packages.len());
     for package in packages {
         let command = command.clone();
         let root_dir = root_dir.clone();
         println!("Detected package change: {}", package);
-        let handle = thread::spawn(move || {
+        thread_pool.execute(move || {
             run_command(command, root_dir, package);
         });
-        handles.push(handle);
     }
 
-    for handle in handles.into_iter() {
-        handle.join().unwrap();
-    }
+    thread_pool.join();
 }
 
 /// Parses command, runs on runner, true if success, false if fail
