@@ -1,7 +1,10 @@
 # shivr
 Lightweight command runner for monorepos. Can run commands on only packages changed against defined root branch
 
-WIP
+
+### Demo
+![](https://github.com/xtenduke/shiv/demo.gif)
+
 
 ### Installing
 ```
@@ -21,7 +24,7 @@ Options:
   --root-dir        root dir to run in
   --package-dir     package directory, default "packages"
   --command         command to run on packages
-  --concurrency     max number of threads to run, default 0
+  --concurrency     max number of threads to run, default 1
   --help            display usage information
 ```
 
