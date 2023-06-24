@@ -50,7 +50,7 @@ struct Args {
     #[argh(option)]
     command: String,
 
-    /// max number of threads to run, default 0 
+    /// max number of threads to run, default 1 
     #[argh(option, default = "default_concurrency()")]
     concurrency: usize,
 }

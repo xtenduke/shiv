@@ -1,11 +1,36 @@
-# shiv
+# shivr
 Lightweight command runner for monorepos. Can run commands on only packages changed against defined root branch
 
-WIP
+
+### Demo
+![](https://github.com/xtenduke/shiv/demo.gif)
+
+
+### Installing
+```
+$ cargo install shivr
+```
+
+### Usage
+```
+Usage: shivr [--detect-changes] [--main-branch <main-branch>] [--root-dir <root-dir>] [--package-dir <package-dir>] --command <command> [--concurrency <concurrency>]
+
+Arguments
+
+Options:
+  --detect-changes  if shiv should run the command on all packages, or just
+                    those changed against main
+  --main-branch     main branch name, default "main"
+  --root-dir        root dir to run in
+  --package-dir     package directory, default "packages"
+  --command         command to run on packages
+  --concurrency     max number of threads to run, default 1
+  --help            display usage information
+```
 
 ### Example
 ```
-cargo run -- --detect-changes --main-branch main --package-dir packages --root-dir /home/jake/Development/group_firewall_mr --command build
+$ shivr --detect-changes --command build
 ```
 
 ### Config files required
@@ -22,6 +47,3 @@ Named `shiv.json`
 }
 ```
 
-
-
-###### Bins to come
