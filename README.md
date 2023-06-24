@@ -3,7 +3,7 @@ Lightweight command runner for monorepos. Can run commands on only packages chan
 
 
 ### Demo
-![](https://github.com/xtenduke/shiv/demo.gif)
+![](https://github.com/xtenduke/shiv/blob/main/demo.gif)
 
 
 ### Installing
