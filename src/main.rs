@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::{env};
 use std::process::exit;
 use argh::FromArgs;
@@ -20,6 +21,10 @@ fn get_env_dir() -> String {
     };
 
     return String::from(root_dir_path.to_str().unwrap());
+}
+
+fn default_concurrency() -> usize {
+    1
 }
 
 /// Arguments
@@ -45,9 +50,9 @@ struct Args {
     #[argh(option)]
     command: String,
 
-    /// on to enable full concurrency, define limit
-    #[argh(switch)]
-    concurrency: i32,
+    /// max number of threads to run, default 0 
+    #[argh(option, default = "default_concurrency()")]
+    concurrency: usize,
 }
 
 
@@ -60,6 +65,7 @@ fn main() {
         &args.main_branch,
         &args.root_dir,
         &args.command,
+        args.concurrency,
     );
 }
 
@@ -69,10 +75,11 @@ fn run(
     main_branch: &String,
     root_dir: &String,
     command: &String,
+    concurrecy: usize
 ) {
     println!(
-        "Running--- detect_changes: {}, root_dir: {}, command: {}",
-        &detect_changes, &root_dir, &command
+        "Running--- detect_changes: {}, root_dir: {}, command: {}, max_concurrency: {}",
+        &detect_changes, &root_dir, &command, concurrecy
     );
 
     let mut packages = get_packages(&String::from(root_dir), package_dir);
@@ -90,7 +97,9 @@ fn run(
 
 
     // if args have concurrecy passed in, use min value of packages.len, concurrency
-    let thread_pool = ThreadPool::new(packages.len());
+    let threads = min(concurrecy, packages.len());
+    
+    let thread_pool = ThreadPool::new(threads.to_owned());
     for package in packages {
         let command = command.clone();
         let root_dir = root_dir.clone();
