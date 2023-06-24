@@ -1,14 +1,18 @@
-use std::{env, thread, process};
+use std::cmp::min;
+use std::{env};
+use std::process::exit;
+use argh::FromArgs;
+use threadpool::ThreadPool;
+
 mod files;
 use files::{filter_files_to_packages, get_packages};
 mod git;
 use git::get_changed_files;
 mod config;
 use config::load_config;
-use argh::FromArgs;
+mod runner;
+use runner::run_on_shell;
 
-extern crate run_shell;
-use run_shell::*;
 
 fn get_env_dir() -> String {
     let root_dir_path = match env::current_dir() {
@@ -17,6 +21,10 @@ fn get_env_dir() -> String {
     };
 
     return String::from(root_dir_path.to_str().unwrap());
+}
+
+fn default_concurrency() -> usize {
+    1
 }
 
 /// Arguments
@@ -41,6 +49,10 @@ struct Args {
     /// command to run on packages
     #[argh(option)]
     command: String,
+
+    /// max number of threads to run, default 0 
+    #[argh(option, default = "default_concurrency()")]
+    concurrency: usize,
 }
 
 
@@ -53,6 +65,7 @@ fn main() {
         &args.main_branch,
         &args.root_dir,
         &args.command,
+        args.concurrency,
     );
 }
 
@@ -62,10 +75,11 @@ fn run(
     main_branch: &String,
     root_dir: &String,
     command: &String,
+    concurrecy: usize
 ) {
     println!(
-        "Running--- detect_changes: {}, root_dir: {}, command: {}",
-        &detect_changes, &root_dir, &command
+        "Running--- detect_changes: {}, root_dir: {}, command: {}, max_concurrency: {}",
+        &detect_changes, &root_dir, &command, concurrecy
     );
 
     let mut packages = get_packages(&String::from(root_dir), package_dir);
@@ -77,34 +91,34 @@ fn run(
 
         if packages.len() == 0 {
             println!("Detected no changes in packages. Exiting");
-            process::exit(0x0100);
+            exit(0x0100);
         }
     }
 
-    let mut handles = Vec::<std::thread::JoinHandle<()>>::new();
+
+    // if args have concurrecy passed in, use min value of packages.len, concurrency
+    let threads = min(concurrecy, packages.len());
+    
+    let thread_pool = ThreadPool::new(threads.to_owned());
     for package in packages {
         let command = command.clone();
         let root_dir = root_dir.clone();
         println!("Detected package change: {}", package);
-        let handle = thread::spawn(move || {
+        thread_pool.execute(move || {
             run_command(command, root_dir, package);
         });
-        handles.push(handle);
     }
 
-    for handle in handles.into_iter() {
-        handle.join().unwrap();
-    }
+    thread_pool.join();
 }
 
-fn run_command(command: String, root_dir: String, package: String) {
+/// Parses command, runs on runner, true if success, false if fail
+fn run_command(command: String, root_dir: String, package: String) -> bool {
     // look for shiv.json file in package
     // process fork here
     let mut path = root_dir.clone();
     path.push_str("/");
     path.push_str(&package);
-
-    assert!(env::set_current_dir(&path).is_ok());
 
     let mut config_path = path.clone();
     config_path.push_str("/");
@@ -119,15 +133,31 @@ fn run_command(command: String, root_dir: String, package: String) {
         }
     }
 
-    if package_command.is_none() {
-        println!("Found no entries for {} in {}", command, package);
-        // process::exit(0x0100);
-    } else {
-        println!("Running {} in {}", command, package);
-        // change cwd
-        println!("Running {} in {}", package_command.clone().unwrap(), &path);
-        cmd!(&package_command.unwrap(), &path).run().unwrap();
-        println!("Successfully ran {}", &path);
-    }
+    if let Some(package_command) = package_command {
+        println!("Running {} in {}", &package_command, package);
+        // https://github.com/rust-lang/rust/issues/53667
+        if let Ok(res) = run_on_shell(&package_command, &path) {
+            let stdout_string = String::from_utf8(res.stdout).unwrap();
+            for out_line in stdout_string.lines() {
+                println!("[{}]  {}", package, out_line);
+            }
 
+            let stderr_string = String::from_utf8(res.stderr).unwrap();
+            for err_line in stderr_string.lines() {
+                println!("[{}]  {}", package, err_line);
+            }
+
+            if res.status.success() {
+                println!("Successfully ran {} on {}", &package_command, &path);
+                return true;
+            }
+        }
+
+        // fallthrough err
+        println!("Execution of {} on {} failed", &package_command, &path);
+        return false;
+    } else {
+        println!("Found no entries for {} in {}", command, package);
+        return true;
+    }
 }
