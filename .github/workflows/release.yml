@@ -50,7 +50,7 @@ jobs:
           path: shivr-Linux-x86
 
       - name: Publish to crates.io
-        run: cargo publish --dry-run
+        run: cargo publish --dry-run --allow-dirty
 
       - name: Github release 
         uses: softprops/action-gh-release@v1
