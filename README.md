@@ -7,6 +7,19 @@ Lightweight command runner for monorepos. Can run commands on only packages chan
 
 
 ### Installing
+#### Install script
+
+View the script [here](https://raw.githubusercontent.com/xtenduke/shivr/main/download.sh)
+
+```
+ # Non root user, can only download
+ $ curl https://raw.githubusercontent.com/xtenduke/shivr/main/download.sh | bash
+ 
+ # Root user, can download and install to /usr/local/bin
+ $ curl https://raw.githubusercontent.com/xtenduke/shivr/main/download.sh | sudo bash
+```
+
+#### From cargo
 ```
 $ cargo install shivr
 ```
