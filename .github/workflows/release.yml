@@ -22,8 +22,9 @@ jobs:
         run: chmod +x target/release/shivr
 
       - name: Move binary
-        run: mkdir shivr-${{runner.os}}-x86
-        run: mv target/release/shivr shivr-${{runner.os}}-x86/
+        run: |
+          mkdir shivr-${{runner.os}}-x86
+          mv target/release/shivr shivr-${{runner.os}}-x86/
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
