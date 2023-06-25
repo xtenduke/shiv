@@ -3,6 +3,7 @@ use std::{env};
 use std::process::exit;
 use argh::FromArgs;
 use threadpool::ThreadPool;
+use std::sync::mpsc::channel;
 
 mod files;
 use files::{filter_files_to_packages, get_packages};
@@ -100,16 +101,26 @@ fn run(
     let threads = min(concurrecy, packages.len());
     
     let thread_pool = ThreadPool::new(threads.to_owned());
+    let (tx, rx) = channel();
     for package in packages {
         let command = command.clone();
         let root_dir = root_dir.clone();
         println!("Detected package change: {}", package);
+        let tx = tx.clone();
         thread_pool.execute(move || {
-            run_command(command, root_dir, package);
+            let result = run_command(command, root_dir, package);
+            tx.send(result).expect("Race condition");
         });
     }
 
     thread_pool.join();
+    for message in rx.into_iter() {
+        if !message {
+            exit(1);
+        }
+    }
+
+    exit(0x0000);
 }
 
 /// Parses command, runs on runner, true if success, false if fail
