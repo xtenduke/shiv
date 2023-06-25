@@ -53,12 +53,17 @@ jobs:
       - name: Publish to crates.io
         run: cargo publish --dry-run --allow-dirty
 
+      - name: Zip files for release
+        run: |
+          zip -rj shivr-linux-x86.zip shivr-Linux-x86
+          zip -rj shivr-macos-x86.zip shivr-macOS-x86
+
       - name: Github release 
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            shivr-Linux-x86
-            shivr-macOS-x86
+            shivr-linux-x86.zip
+            shivr-macos-x86.zip
             LICENSE
 
