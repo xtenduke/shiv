@@ -22,10 +22,10 @@ jobs:
         run: cargo build --release
 
       - name: Make binary Executable
-        run: chmod +x target/release/shiv
+        run: chmod +x target/release/shivr
 
       - name: Zip binary
-        run: zip -jr shivr-${{runner.os}}-x86.zip target/release/shiv
+        run: zip -jr shivr-${{runner.os}}-x86.zip target/release/shivr
 
       - name: Upload binary
         uses: actions/upload-artifact@v3
@@ -56,4 +56,4 @@ jobs:
             shivr-linux-x86.zip
             shivr-macOS-x86.zip
             LICENSE
-      
+
