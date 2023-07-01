@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn get_packages_returns_package_dirs() {
-        let result = get_packages(&String::from("./.testdata"), &String::from("packages"));
+        let result = get_packages(&String::from("/tmp/shivr/.testdata"), &String::from("packages"));
         assert_eq!(result.len(), 3);
 
         // can't guarantee order of return

@@ -2,7 +2,7 @@ use git2::{Repository, BranchType, Branch, Tree, DiffDelta};
 
 /// Get main branch reference, either from local checked out branch, or pull from remote config
 pub fn get_main_branch_ref<'a>(repo: &'a Repository, main_branch: &String) -> Branch<'a> {
-    let main: Option<Branch> = match repo.find_branch(&main_branch, BranchType::Remote) {
+    let main: Option<Branch> = match repo.find_branch(&main_branch, BranchType::Local) {
         Ok(main) => Some(main),
         Err(_) => None,
     };
@@ -72,4 +72,17 @@ pub fn get_changed_files(root_dir: &String, main_branch: &String) -> Vec<String>
     };
     
     return changes;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_changed_files_returns_index_diff_to_main() {
+        let result = get_changed_files(&String::from("/tmp/shivr/.testdata"), &String::from("main"));
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], "packages/backend/run.sh");
+        assert_eq!(result[1], "packages/frontend/run.sh");
+    }
 }
