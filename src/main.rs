@@ -98,7 +98,9 @@ fn run(
 
 
     // if args have concurrecy passed in, use min value of packages.len, concurrency
-    let threads = min(concurrecy, packages.len());
+    let num_packages = packages.len();
+    let threads = min(concurrecy, num_packages);
+
     
     let thread_pool = ThreadPool::new(threads.to_owned());
     let (tx, rx) = channel();
@@ -114,13 +116,21 @@ fn run(
     }
 
     thread_pool.join();
-    for message in rx.into_iter() {
+    let mut exit_code = 0;
+    let mut i = 0;
+    for message in rx {
         if !message {
-            exit(1);
+            exit_code = 1;
+        }
+
+        i += 1;
+        if i == num_packages {
+            break;
         }
     }
 
-    exit(0x0000);
+    println!("Exiting with {}", exit_code);
+    exit(exit_code);
 }
 
 /// Parses command, runs on runner, true if success, false if fail
