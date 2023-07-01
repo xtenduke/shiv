@@ -76,11 +76,11 @@ fn run(
     main_branch: &String,
     root_dir: &String,
     command: &String,
-    concurrecy: usize
+    concurrency: usize
 ) {
     println!(
         "Running--- detect_changes: {}, root_dir: {}, command: {}, max_concurrency: {}",
-        &detect_changes, &root_dir, &command, concurrecy
+        &detect_changes, &root_dir, &command, concurrency
     );
 
     let mut packages = get_packages(&String::from(root_dir), package_dir);
@@ -97,9 +97,9 @@ fn run(
     }
 
 
-    // if args have concurrecy passed in, use min value of packages.len, concurrency
+    // if args have concurrency passed in, use min value of packages.len, concurrency
     let num_packages = packages.len();
-    let threads = min(concurrecy, num_packages);
+    let threads = min(concurrency, num_packages);
 
     
     let thread_pool = ThreadPool::new(threads.to_owned());
