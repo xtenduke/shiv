@@ -11,7 +11,6 @@ pub fn get_main_branch_ref<'a>(repo: &'a Repository, main_branch: &String) -> Br
         // Fallback to remote
         // find current remote
 
-        // pick first remote.. lol
         let remote_names = match repo.remotes() {
             Ok(remote_names) => remote_names,
             Err(e) => panic!("Failed to get remote names {}", e),
@@ -59,7 +58,6 @@ pub fn get_changed_files(root_dir: &String, main_branch: &String) -> Vec<String>
         let new_file = diff.new_file().path().unwrap().to_str().unwrap();
         let old_file = diff.old_file().path().unwrap().to_str().unwrap();
         
-        // rename into diff path potentially
         changes.push(new_file.to_owned());
         if new_file != old_file {
             changes.push(old_file.to_owned());

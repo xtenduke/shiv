@@ -25,7 +25,7 @@ pub fn get_packages(root_dir_path: &String, packages_dir: &String) -> Vec<String
             Err(e) => panic!("Failed reading metadata from file: {}", e),
         };
         
-        if metadata.is_dir() { //only interested in 
+        if metadata.is_dir() {
             let filename = match path.file_name() {
                 Some(filename) => filename.to_str().unwrap(),
                 None => panic!("Couldn't get filename"),
