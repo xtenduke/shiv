@@ -77,12 +77,26 @@ pub fn get_changed_files(root_dir: &String, main_branch: &String) -> Vec<String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::test_support::{TEST_DATA_DIR, TEST_DATA_MAIN_BRANCH};
+
+    #[test]
+    fn get_main_branch_ref_returns_local_branch() {
+        let repo = match Repository::open(TEST_DATA_DIR) {
+            Ok(repo) => repo,
+            Err(e) => panic!("Failed to open: {}", e),
+        };
+
+        let result = get_main_branch_ref(&repo, &String::from(TEST_DATA_MAIN_BRANCH));
+        assert_eq!(result.name().expect("branch name fail").unwrap(), TEST_DATA_MAIN_BRANCH);
+    }
 
     #[test]
     fn get_changed_files_returns_index_diff_to_main() {
-        let result = get_changed_files(&String::from("/tmp/shivr/.testdata"), &String::from("main"));
+        let result = get_changed_files(&String::from(TEST_DATA_DIR), &String::from(TEST_DATA_MAIN_BRANCH));
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], "packages/backend/run.sh");
         assert_eq!(result[1], "packages/frontend/run.sh");
     }
+
+
 }

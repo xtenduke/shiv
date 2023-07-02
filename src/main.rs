@@ -13,7 +13,7 @@ mod config;
 use config::load_config;
 mod runner;
 use runner::run_on_shell;
-
+mod test;
 
 fn get_env_dir() -> String {
     let root_dir_path = match env::current_dir() {

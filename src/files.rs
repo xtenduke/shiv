@@ -65,10 +65,11 @@ pub fn filter_files_to_packages(known_packages: Vec<String>, changed_files: Vec<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::test_support::{TEST_DATA_DIR, TEST_DATA_PACKAGE_DIR};
 
     #[test]
     fn get_packages_returns_package_dirs() {
-        let result = get_packages(&String::from("/tmp/shivr/.testdata"), &String::from("packages"));
+        let result = get_packages(&String::from(TEST_DATA_DIR), &String::from(TEST_DATA_PACKAGE_DIR));
         assert_eq!(result.len(), 3);
 
         // can't guarantee order of return
