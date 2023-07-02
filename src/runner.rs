@@ -20,3 +20,20 @@ pub fn run_on_shell(command: &String, dir: &String) -> Result<Output, std::io::E
     let res = child.wait_with_output();
     return res;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test::test_support::TEST_DATA_DIR;
+
+    #[test]
+    fn run_on_shell_can_run_ls() {
+        let result = run_on_shell(&String::from("ls"), &String::from(TEST_DATA_DIR)).unwrap();
+
+        let stdout_string = String::from_utf8(result.stdout);
+        assert_eq!(stdout_string.unwrap(), "packages\ntest\n");
+
+        let empty_vec: Vec<u8> = Vec::new();
+        assert_eq!(result.stderr, empty_vec);
+    }
+}
