@@ -9,6 +9,8 @@ mkdir -p packages/backend packages/client packages/frontend
 touch test
 
 git init -b main
+git config --global user.email "jake@example.com"
+git config --global user.name "Jake Laurie"
 git add .
 git commit -m "Initial commit"
 git branch f/test
