@@ -1,5 +1,7 @@
 use std::fs;
 
+/// inspects the configured packages directory, looks for packages and returns them relative to the root
+/// i.e. packages/client
 pub fn get_packages(root_dir_path: &String, packages_dir: &String) -> Vec<String> {
     let mut package_dirs: Vec<String> = Vec::new();
     
@@ -25,7 +27,7 @@ pub fn get_packages(root_dir_path: &String, packages_dir: &String) -> Vec<String
             Err(e) => panic!("Failed reading metadata from file: {}", e),
         };
         
-        if metadata.is_dir() { //only interested in 
+        if metadata.is_dir() {
             let filename = match path.file_name() {
                 Some(filename) => filename.to_str().unwrap(),
                 None => panic!("Couldn't get filename"),
@@ -42,6 +44,7 @@ pub fn get_packages(root_dir_path: &String, packages_dir: &String) -> Vec<String
     return package_dirs;
 }
 
+/// takes known packages and files, returns distinct packages that contain the changed_files
 pub fn filter_files_to_packages(known_packages: Vec<String>, changed_files: Vec<String>) -> Vec<String> {
     let mut changed_packages: Vec<String> = Vec::new();
 
@@ -56,4 +59,45 @@ pub fn filter_files_to_packages(known_packages: Vec<String>, changed_files: Vec<
     }
 
     return changed_packages;
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test::test_support::{TEST_DATA_DIR, TEST_DATA_PACKAGE_DIR};
+
+    #[test]
+    fn get_packages_returns_package_dirs() {
+        let result = get_packages(&String::from(TEST_DATA_DIR), &String::from(TEST_DATA_PACKAGE_DIR));
+        assert_eq!(result.len(), 3);
+
+        // can't guarantee order of return
+        let mut found_client = false;
+        let mut found_frontend = false;
+        let mut found_backend = false;
+        for package in result {
+            if package == "packages/client" {
+                found_client = true;
+            } else if package == "packages/frontend" {
+                found_frontend = true;
+            } else if package == "packages/backend" {
+                found_backend = true;
+            }
+        }
+
+        assert_eq!(found_client, true);
+        assert_eq!(found_frontend, true);
+        assert_eq!(found_backend, true);
+    }
+
+    #[test]
+    fn filter_files_to_packages_returns_packages() {
+        let known_packages = vec!("packages/client".to_string(), "packages/frontend".to_string(), "packages/backend".to_string());
+        let changed_files = vec!("garbage.txt".to_string(), "packages/frontend/run.sh".to_string(), "packages/backend/run.sh".to_string());
+
+        let result = filter_files_to_packages(known_packages, changed_files);
+        assert_eq!(result[0], "packages/frontend".to_string());
+        assert_eq!(result[1], "packages/backend".to_string());
+    }
 }

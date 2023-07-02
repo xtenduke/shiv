@@ -18,6 +18,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Test
+        run: |
+          ./setup_test.sh
+          cargo test
+
       - name: Build Release
         run: cargo build --release
 

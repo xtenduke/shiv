@@ -2,7 +2,7 @@ use git2::{Repository, BranchType, Branch, Tree, DiffDelta};
 
 /// Get main branch reference, either from local checked out branch, or pull from remote config
 pub fn get_main_branch_ref<'a>(repo: &'a Repository, main_branch: &String) -> Branch<'a> {
-    let main: Option<Branch> = match repo.find_branch(&main_branch, BranchType::Remote) {
+    let main: Option<Branch> = match repo.find_branch(&main_branch, BranchType::Local) {
         Ok(main) => Some(main),
         Err(_) => None,
     };
@@ -11,7 +11,6 @@ pub fn get_main_branch_ref<'a>(repo: &'a Repository, main_branch: &String) -> Br
         // Fallback to remote
         // find current remote
 
-        // pick first remote.. lol
         let remote_names = match repo.remotes() {
             Ok(remote_names) => remote_names,
             Err(e) => panic!("Failed to get remote names {}", e),
@@ -59,7 +58,6 @@ pub fn get_changed_files(root_dir: &String, main_branch: &String) -> Vec<String>
         let new_file = diff.new_file().path().unwrap().to_str().unwrap();
         let old_file = diff.old_file().path().unwrap().to_str().unwrap();
         
-        // rename into diff path potentially
         changes.push(new_file.to_owned());
         if new_file != old_file {
             changes.push(old_file.to_owned());
@@ -74,4 +72,31 @@ pub fn get_changed_files(root_dir: &String, main_branch: &String) -> Vec<String>
     };
     
     return changes;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test::test_support::{TEST_DATA_DIR, TEST_DATA_MAIN_BRANCH};
+
+    #[test]
+    fn get_main_branch_ref_returns_local_branch() {
+        let repo = match Repository::open(TEST_DATA_DIR) {
+            Ok(repo) => repo,
+            Err(e) => panic!("Failed to open: {}", e),
+        };
+
+        let result = get_main_branch_ref(&repo, &String::from(TEST_DATA_MAIN_BRANCH));
+        assert_eq!(result.name().expect("branch name fail").unwrap(), TEST_DATA_MAIN_BRANCH);
+    }
+
+    #[test]
+    fn get_changed_files_returns_index_diff_to_main() {
+        let result = get_changed_files(&String::from(TEST_DATA_DIR), &String::from(TEST_DATA_MAIN_BRANCH));
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], "packages/backend/run.sh");
+        assert_eq!(result[1], "packages/frontend/run.sh");
+    }
+
+
 }

@@ -60,3 +60,7 @@ Named `shiv.json`
 }
 ```
 
+### Development
+
+##### Testing
+`setup_test.sh` needs to be run before running `cargo test`

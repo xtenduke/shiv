@@ -13,7 +13,7 @@ mod config;
 use config::load_config;
 mod runner;
 use runner::run_on_shell;
-
+mod test;
 
 fn get_env_dir() -> String {
     let root_dir_path = match env::current_dir() {
@@ -76,11 +76,11 @@ fn run(
     main_branch: &String,
     root_dir: &String,
     command: &String,
-    concurrecy: usize
+    concurrency: usize
 ) {
     println!(
         "Running--- detect_changes: {}, root_dir: {}, command: {}, max_concurrency: {}",
-        &detect_changes, &root_dir, &command, concurrecy
+        &detect_changes, &root_dir, &command, concurrency
     );
 
     let mut packages = get_packages(&String::from(root_dir), package_dir);
@@ -97,9 +97,9 @@ fn run(
     }
 
 
-    // if args have concurrecy passed in, use min value of packages.len, concurrency
+    // if args have concurrency passed in, use min value of packages.len, concurrency
     let num_packages = packages.len();
-    let threads = min(concurrecy, num_packages);
+    let threads = min(concurrency, num_packages);
 
     
     let thread_pool = ThreadPool::new(threads.to_owned());
@@ -135,12 +135,11 @@ fn run(
 
 /// Parses command, runs on runner, true if success, false if fail
 fn run_command(command: String, root_dir: String, package: String) -> bool {
-    // look for shiv.json file in package
-    // process fork here
     let mut path = root_dir.clone();
     path.push_str("/");
     path.push_str(&package);
 
+    // look for shiv.json file in package
     let mut config_path = path.clone();
     config_path.push_str("/");
     config_path.push_str("shiv.json");
@@ -154,7 +153,7 @@ fn run_command(command: String, root_dir: String, package: String) -> bool {
         }
     }
 
-    if let Some(package_command) = package_command {
+    return if let Some(package_command) = package_command {
         println!("Running {} in {}", &package_command, package);
         // https://github.com/rust-lang/rust/issues/53667
         if let Ok(res) = run_on_shell(&package_command, &path) {
@@ -174,11 +173,10 @@ fn run_command(command: String, root_dir: String, package: String) -> bool {
             }
         }
 
-        // fallthrough err
         println!("Execution of {} on {} failed", &package_command, &path);
-        return false;
+        false
     } else {
         println!("Found no entries for {} in {}", command, package);
-        return true;
+        true
     }
 }
