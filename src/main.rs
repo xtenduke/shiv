@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::{env};
+use std::env;
 use std::process::exit;
 use argh::FromArgs;
 use threadpool::ThreadPool;
@@ -144,7 +144,12 @@ fn run_command(command: String, root_dir: String, package: String) -> bool {
     config_path.push_str("/");
     config_path.push_str("shiv.json");
 
-    let config = load_config(&config_path);
+    let config = match load_config(&config_path) {
+        Ok(config) => config,
+        Err(_e) => {
+            exit(1);
+        }
+    };
 
     let mut package_command: Option<String> = None;
     for script in config.scripts {
